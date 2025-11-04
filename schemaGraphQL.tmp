@@ -1,0 +1,28 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Todo @SQL{
+  id: ID! @SQL_PRIMARY
+  text: String!
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: SoftDelete
+  done: Boolean!
+  user: User! @SQL_SKIP_MUTATION
+  userID: ID!
+}
+
+type User @SQL{
+  id:ID! @SQL_PRIMARY
+  name: String!
+  todos: [Todo!]!
+}
+
+type Query {
+  bar: String!
+}
+
+type Mutation {
+  foo: String!
+}
