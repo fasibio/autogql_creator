@@ -46,7 +46,15 @@ func main() {
 						Destination: &runner.Cfg.Path,
 					},
 				},
-				Name:   "init",
+				Name: "init",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "gopath",
+						Value:       "",
+						Usage:       "to test gopath",
+						Destination: &runner.Cfg.GoPath,
+					},
+				},
 				Usage:  "to create a new autogql project",
 				Action: runner.Create,
 			},
@@ -58,7 +66,8 @@ func main() {
 }
 
 type Config struct {
-	Path string
+	Path   string
+	GoPath string
 }
 
 type Runner struct {
@@ -107,7 +116,7 @@ func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 	if err := r.checkPathIsDirEmptyOrNotExist(); err != nil {
 		return err
 	}
-	if err := r.ExecuteAtFolder("go", "mod", "init"); err != nil {
+	if err := r.ExecuteAtFolder("go", "mod", "init", r.Cfg.GoPath); err != nil {
 		return err
 	}
 	if err := os.WriteFile(path.Join(r.Cfg.Path, "tools.go"), toolsGoFile, 0644); err != nil {
