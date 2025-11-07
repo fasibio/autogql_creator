@@ -1,0 +1,90 @@
+
+ _____      _                 _            _   _             
+|_   _|    | |               | |          | | (_)            
+  | | _ __ | |_ _ __ ___   __| |_   _  ___| |_ _  ___  _ __  
+  | || '_ \| __| '__/ _ \ / _` | | | |/ __| __| |/ _ \| '_ \ 
+ _| || | | | |_| | | (_) | (_| | |_| | (__| |_| | (_) | | | |
+ \___/_| |_|\__|_|  \___/ \__,_|\__,_|\___|\__|_|\___/|_| |_|
+
+git init and git commit was executed between gqlgen setup and autogqlgen.
+
+So you can check the changes. if something was removed what you want to hold.
+
+You can update the schema at graph/schema.graphqls.
+After changing run:
+	go run plugin/main.go to regenerate code. 
+
+As Default a SQLITE was used. 
+You can change this at server.go
+
+
+____ _  _ ____ _  _ ___  _    ____ 
+|___  \/  |__| |\/| |__] |    |___ 
+|___ _/\_ |  | |  | |    |___ |___
+
+Some Queries/Mutation you can directly execute open browser: 
+
+────────────────────────────────────────────────────────────────────────────────────────────    
+                                                                                                  
+     mutation addTodo {                                                                           
+       addTodo(input: { id: 1, text: "Start writing autogql", userID: 1, done: false }) {         
+         affected {                                                                               
+           id                                                                                     
+           text                                                                                   
+           createdAt                                                                              
+           done                                                                                   
+         }                                                                                        
+       }                                                                                          
+     }                                                                                            
+                                                                                                  
+     query todos {                                                                                
+       queryTodo(filter: { user: { name: { startsWith: "Did" } } }) {                             
+         data {                                                                                   
+           id                                                                                     
+           text                                                                                   
+           user {                                                                                 
+             name                                                                                 
+           }                                                                                      
+         }                                                                                        
+       }                                                                                          
+     }                                                                                            
+                                                                                                  
+     query showFirst {                                                                            
+       getUser(id: 1) {                                                                           
+         id                                                                                       
+         name                                                                                     
+         todos {                                                                                  
+           text                                                                                   
+           createdAt                                                                              
+           done                                                                                   
+         }                                                                                        
+       }                                                                                          
+     }                                                                                            
+                                                                                                  
+     mutation addUser {                                                                           
+       addUser(                                                                                   
+         input: { id: 1, name: "Did you see the autoincrement feature?", todos: [] }              
+       ) {                                                                                        
+         affected {                                                                               
+           id                                                                                     
+           name                                                                                   
+         }                                                                                        
+       }                                                                                          
+     }                                                                                            
+                                                                                                  
+     mutation removeFirst {                                                                       
+       deleteUser(filter: { id: { eq: 1 } }) {                                                    
+         count                                                                                    
+       }                                                                                          
+     }                                                                                            
+                                                                                                  
+──────────────────────────────────────────────────────────────────────────────────────────────────
+
+                               
+,------.                         
+|  .-.  \  ,---. ,--,--,  ,---.  
+|  |  \  :| .-. ||      \| .-. : 
+|  '--'  /' '-' '|  ||  |\   --. 
+`-------'  `---' `--''--' `----'
+
+ 

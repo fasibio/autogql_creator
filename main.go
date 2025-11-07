@@ -12,6 +12,9 @@ import (
 	_ "embed"
 )
 
+//go:embed doc.txt
+var docFile string
+
 //go:embed tools.go.tmp
 var toolsGoFile []byte
 
@@ -99,8 +102,16 @@ func (r *Runner) checkPathIsDirEmptyOrNotExist() error {
 }
 
 func (r *Runner) ExecuteAtFolder(name string, arg ...string) error {
+	return r.ExecuteAtFolderWithMap(true, name, arg...)
+}
+
+func (r *Runner) ExecuteAtFolderWithMap(mapPrints bool, name string, arg ...string) error {
 	cmd := exec.Command(name, arg...)
 	cmd.Dir = string(r.Cfg.Path)
+	if mapPrints {
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+	}
 	err := cmd.Run()
 	if err != nil {
 		return fmt.Errorf("command %s %v returns error: %w", name, arg, err)
@@ -170,7 +181,7 @@ func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 		return err
 	}
 
-	if err := r.ExecuteAtFolder("go", "run", "plugin/main.go"); err != nil {
+	if err := r.ExecuteAtFolderWithMap(false, "go", "run", "plugin/main.go"); err != nil {
 		//no break error is fine
 
 	}
@@ -206,69 +217,7 @@ func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 	if err := r.ExecuteAtFolder("gopls", "imports", "-w", path.Join("server.go")); err != nil {
 		return err
 	}
-	fmt.Printf(`git init and git commit was executed between gqlgen setup and autogqlgen.
-So you can check the changes. if something was removed what you want to hold.
-
-You can update the schema at graph/schema.graphqls.
-After changing run:
-	go run plugin/main.go to regenerate code. 
-
-As Default a SQLITE was used. 
-You can change this at server.go
-
-Some Queries/Mutation you can directly execute open browser: 
-
-mutation addTodo {
-  addTodo(input: { id: 1, text: "Start writing autogql", userID: 1, done: false }) {
-    affected {
-      id
-      text
-      createdAt
-      done
-    }
-  }
-}
-
-query todos {
-  queryTodo(filter: { user: { name: { startsWith: "Did" } } }) {
-    data {
-      id
-      text
-      user {
-        name
-      }
-    }
-  }
-}
-
-query showFirst {
-  getUser(id: 1) {
-    id
-    name
-    todos {
-      text
-      createdAt
-      done
-    }
-  }
-}
-
-mutation addUser {
-  addUser(
-    input: { id: 1, name: "Did you see the autoincrement feature?", todos: [] }
-  ) {
-    affected {
-      id
-      name
-    }
-  }
-}
-
-mutation removeFirst {
-  deleteUser(filter: { id: { eq: 1 } }) {
-    count
-  }
-}`)
+	fmt.Print(docFile)
 	fmt.Printf("to execute:\ncd %s \ngo run server.go\n", r.Cfg.Path)
 
 	return nil
