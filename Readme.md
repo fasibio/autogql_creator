@@ -1,3 +1,19 @@
 # Creator to make it easy to start with [autogql](https://github.com/fasibio/autogql)
 
-just execute: bblalal
+Helper for easier setup of autogql. 
+Just simple call (inside GOROOT)
+```
+go run github.com/fasibio/autogql_creator@v0.0.4 init [foldername for setup project]
+```
+
+
+or outside GOROOT
+
+```
+go run github.com/fasibio/autogql_creator@v0.0.4 init --gopath example.com [foldername for setup project]
+```
+
+read and follow [output](./doc.txt). 
+
+
+
