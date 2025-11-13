@@ -160,17 +160,18 @@ func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 	if err := r.ExecuteTidy(ctx); err != nil {
 		return err
 	}
+	if r.Cfg.GitInit {
+		if err := r.ExecuteAtFolder(ctx, "git", "init"); err != nil {
+			return err
+		}
 
-	if err := r.ExecuteAtFolder(ctx, "git", "init"); err != nil {
-		return err
-	}
+		if err := r.ExecuteAtFolder(ctx, "git", "add", "."); err != nil {
+			return err
+		}
 
-	if err := r.ExecuteAtFolder(ctx, "git", "add", "."); err != nil {
-		return err
-	}
-
-	if err := r.ExecuteAtFolder(ctx, "git", "commit", "-m", "gqlgen init finished"); err != nil {
-		return err
+		if err := r.ExecuteAtFolder(ctx, "git", "commit", "-m", "gqlgen init finished"); err != nil {
+			return err
+		}
 	}
 
 	if err := os.Mkdir(path.Join(r.Cfg.Path, "plugin"), 0755); err != nil {
