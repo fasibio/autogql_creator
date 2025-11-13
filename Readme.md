@@ -3,14 +3,14 @@
 Helper for easier setup of autogql. 
 Just simple call (inside GOROOT)
 ```
-go run github.com/fasibio/autogql_creator@v0.0.4 init [foldername for setup project]
+go run github.com/fasibio/autogql_creator@latest init [foldername for setup project]
 ```
 
 
 or outside GOROOT
 
 ```
-go run github.com/fasibio/autogql_creator@v0.0.4 init --gopath example.com [foldername for setup project]
+go run github.com/fasibio/autogql_creator@latest init --gopath example.com [foldername for setup project]
 ```
 
 read and follow [output](./doc.txt). 

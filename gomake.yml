@@ -3,7 +3,8 @@ vars:
   b: c
 ---
 
-test:
+next:tag:push:
+  doc: Create next tag with svu
   script: 
-    - echo {{.Vars.a}}
-
+    - git tag "$(svu next)"
+    - git push --tags
