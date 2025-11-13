@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"syscall"
 
 	"github.com/urfave/cli/v3"
 
@@ -57,6 +58,12 @@ func main() {
 						Usage:       "to test gopath",
 						Destination: &runner.Cfg.GoPath,
 					},
+					&cli.BoolFlag{
+						Name:        "gitInit",
+						Value:       true,
+						Usage:       "execute a git init command between 99desing/gqlgen init and autogqlgen init. To see the diffenerenz and react on int after.",
+						Destination: &runner.Cfg.GitInit,
+					},
 				},
 				Usage:  "to create a new autogql project",
 				Action: runner.Create,
@@ -69,8 +76,9 @@ func main() {
 }
 
 type Config struct {
-	Path   string
-	GoPath string
+	Path    string
+	GoPath  string
+	GitInit bool
 }
 
 type Runner struct {
@@ -101,16 +109,26 @@ func (r *Runner) checkPathIsDirEmptyOrNotExist() error {
 	return nil
 }
 
-func (r *Runner) ExecuteAtFolder(name string, arg ...string) error {
-	return r.ExecuteAtFolderWithMap(true, name, arg...)
+func (r *Runner) ExecuteAtFolder(ctx context.Context, name string, arg ...string) error {
+	return r.ExecuteAtFolderWithMap(ctx, true, name, arg...)
 }
 
-func (r *Runner) ExecuteAtFolderWithMap(mapPrints bool, name string, arg ...string) error {
-	cmd := exec.Command(name, arg...)
+func (r *Runner) ExecuteAtFolderWithMap(ctx context.Context, mapPrints bool, name string, arg ...string) error {
+	cmd := exec.CommandContext(ctx, name, arg...)
+	go func() {
+		<-ctx.Done()
+		// Kill the whole process group
+		if cmd.Process != nil {
+			syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) //nolint:errcheck //there is nothing we can do when an error is happen here
+		}
+	}()
 	cmd.Dir = string(r.Cfg.Path)
 	if mapPrints {
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
+	}
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true, // create new process group
 	}
 	err := cmd.Run()
 	if err != nil {
@@ -119,40 +137,41 @@ func (r *Runner) ExecuteAtFolderWithMap(mapPrints bool, name string, arg ...stri
 	return nil
 }
 
-func (r *Runner) ExecuteTidy() error {
-	return r.ExecuteAtFolder("go", "mod", "tidy")
+func (r *Runner) ExecuteTidy(ctx context.Context) error {
+	return r.ExecuteAtFolder(ctx, "go", "mod", "tidy")
 }
 
 func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 	if err := r.checkPathIsDirEmptyOrNotExist(); err != nil {
 		return err
 	}
-	if err := r.ExecuteAtFolder("go", "mod", "init", r.Cfg.GoPath); err != nil {
+	if err := r.ExecuteAtFolder(ctx, "go", "mod", "init", r.Cfg.GoPath); err != nil {
 		return err
 	}
 	if err := os.WriteFile(path.Join(r.Cfg.Path, "tools.go"), toolsGoFile, 0644); err != nil {
 		return err
 	}
-	if err := r.ExecuteTidy(); err != nil {
+	if err := r.ExecuteTidy(ctx); err != nil {
 		return err
 	}
-	if err := r.ExecuteAtFolder("go", "run", "github.com/99designs/gqlgen", "init"); err != nil {
+	if err := r.ExecuteAtFolder(ctx, "go", "run", "github.com/99designs/gqlgen", "init"); err != nil {
 		return err
 	}
-	if err := r.ExecuteTidy(); err != nil {
+	if err := r.ExecuteTidy(ctx); err != nil {
 		return err
 	}
+	if r.Cfg.GitInit {
+		if err := r.ExecuteAtFolder(ctx, "git", "init"); err != nil {
+			return err
+		}
 
-	if err := r.ExecuteAtFolder("git", "init"); err != nil {
-		return err
-	}
+		if err := r.ExecuteAtFolder(ctx, "git", "add", "."); err != nil {
+			return err
+		}
 
-	if err := r.ExecuteAtFolder("git", "add", "."); err != nil {
-		return err
-	}
-
-	if err := r.ExecuteAtFolder("git", "commit", "-m", "gqlgen init finished"); err != nil {
-		return err
+		if err := r.ExecuteAtFolder(ctx, "git", "commit", "-m", "gqlgen init finished"); err != nil {
+			return err
+		}
 	}
 
 	if err := os.Mkdir(path.Join(r.Cfg.Path, "plugin"), 0755); err != nil {
@@ -161,7 +180,7 @@ func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 	if err := os.WriteFile(path.Join(r.Cfg.Path, "plugin", "main.go"), pluginMainGoFile, 0644); err != nil {
 		return err
 	}
-	if err := r.ExecuteTidy(); err != nil {
+	if err := r.ExecuteTidy(ctx); err != nil {
 		return err
 	}
 	schemaFilePath := path.Join(r.Cfg.Path, "graph", "schema.graphqls")
@@ -181,11 +200,9 @@ func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 		return err
 	}
 
-	if err := r.ExecuteAtFolderWithMap(false, "go", "run", "plugin/main.go"); err != nil {
-		//no break error is fine
+	r.ExecuteAtFolderWithMap(ctx, false, "go", "run", "plugin/main.go") //nolint:errcheck //we know it will cotains but this is fine at the pipe
 
-	}
-	if err := r.ExecuteTidy(); err != nil {
+	if err := r.ExecuteTidy(ctx); err != nil {
 		return err
 	}
 
@@ -197,7 +214,7 @@ func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 		return err
 	}
 
-	if err := r.ExecuteAtFolder("gopls", "imports", "-w", path.Join("graph/resolver.go")); err != nil {
+	if err := r.ExecuteAtFolder(ctx, "gopls", "imports", "-w", path.Join("graph/resolver.go")); err != nil {
 		return err
 	}
 
@@ -210,11 +227,11 @@ func (r *Runner) Create(ctx context.Context, c *cli.Command) error {
 		return err
 	}
 
-	if err := r.ExecuteTidy(); err != nil {
+	if err := r.ExecuteTidy(ctx); err != nil {
 		return err
 	}
 
-	if err := r.ExecuteAtFolder("gopls", "imports", "-w", path.Join("server.go")); err != nil {
+	if err := r.ExecuteAtFolder(ctx, "gopls", "imports", "-w", path.Join("server.go")); err != nil {
 		return err
 	}
 	fmt.Print(docFile)

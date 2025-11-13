@@ -1,0 +1,9 @@
+vars: 
+  a: b
+  b: c
+---
+
+test:
+  script: 
+    - echo {{.Vars.a}}
+
