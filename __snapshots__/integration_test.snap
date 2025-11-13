@@ -1,0 +1,43 @@
+
+[TestCreation - 1]
+{
+ "addUser": {
+  "affected": [
+   {
+    "id": 1,
+    "name": "Did you see the autoincrement feature?"
+   }
+  ]
+ }
+}
+---
+
+[TestCreation - 2]
+{
+ "addTodo": {
+  "affected": [
+   {
+    "done": false,
+    "id": 1,
+    "text": "Start writing autogql"
+   }
+  ]
+ }
+}
+---
+
+[TestCreation - 3]
+{
+ "queryTodo": {
+  "data": [
+   {
+    "id": 1,
+    "text": "Start writing autogql",
+    "user": {
+     "name": "Did you see the autoincrement feature?"
+    }
+   }
+  ]
+ }
+}
+---

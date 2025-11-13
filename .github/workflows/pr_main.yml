@@ -1,0 +1,10 @@
+name: PR
+on: 
+  pull_request:
+    branches: [ main, nextRelease* ]
+
+jobs:
+  tests:
+    name: Test
+    uses: ./.github/workflows/job_tests.yml
+
