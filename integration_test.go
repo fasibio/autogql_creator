@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -63,7 +64,8 @@ func TestCreation(t *testing.T) {
 
 	r := Runner{
 		Cfg: &Config{
-			Path: testFolder,
+			Path:   testFolder,
+			GoPath: fmt.Sprintf("github.com/fasibio/autogql_creator/%s", testFolder),
 		},
 	}
 
