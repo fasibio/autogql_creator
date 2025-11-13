@@ -64,8 +64,9 @@ func TestCreation(t *testing.T) {
 
 	r := Runner{
 		Cfg: &Config{
-			Path:   testFolder,
-			GoPath: fmt.Sprintf("github.com/fasibio/autogql_creator/%s", testFolder),
+			Path:    testFolder,
+			GoPath:  fmt.Sprintf("github.com/fasibio/autogql_creator/%s", testFolder),
+			GitInit: false,
 		},
 	}
 

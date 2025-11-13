@@ -58,6 +58,12 @@ func main() {
 						Usage:       "to test gopath",
 						Destination: &runner.Cfg.GoPath,
 					},
+					&cli.BoolFlag{
+						Name:        "gitInit",
+						Value:       true,
+						Usage:       "execute a git init command between 99desing/gqlgen init and autogqlgen init. To see the diffenerenz and react on int after.",
+						Destination: &runner.Cfg.GitInit,
+					},
 				},
 				Usage:  "to create a new autogql project",
 				Action: runner.Create,
@@ -70,8 +76,9 @@ func main() {
 }
 
 type Config struct {
-	Path   string
-	GoPath string
+	Path    string
+	GoPath  string
+	GitInit bool
 }
 
 type Runner struct {
