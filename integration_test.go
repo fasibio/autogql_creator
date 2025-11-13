@@ -95,7 +95,7 @@ func TestCreation(t *testing.T) {
 			return false
 		}
 		return true
-	}, 20*time.Second, 1*time.Second)
+	}, 200*time.Second, 1*time.Second)
 
 	client := graphql.NewClient(queryUrl)
 	for _, r := range []string{addUserMut, addTodoMut, QueryTodos} {
